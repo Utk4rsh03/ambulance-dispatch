@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Ambulance Command Center</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#1f2335;
+color:white;
+text-align:center;
+}
+
+.container{
+display:flex;
+justify-content:center;
+gap:40px;
+margin-top:20px;
+}
+
+#map{
+display:grid;
+grid-template-columns:repeat(10,70px);
+grid-gap:3px;
+}
+
+.cell{
+width:70px;
+height:55px;
+background:#2e3350;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:10px;
+border-radius:5px;
+}
+
+.axis{
+color:#aaa;
+font-size:12px;
+}
+
+.panel{
+background:#2e3350;
+padding:20px;
+border-radius:8px;
+width:280px;
+text-align:left;
+}
+
+button{
+padding:8px 15px;
+background:#ff4d4d;
+border:none;
+color:white;
+cursor:pointer;
+margin-top:10px;
+}
+
+input{
+width:60px;
+padding:5px;
+margin:5px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>🚑 Smart Ambulance Dispatcher</h2>
+
+<p>Grid Size: <b>10 × 10</b> (Valid coordinates: 0 – 9)</p>
+
+<div class="container">
+
+<div>
+<div id="xaxis"></div>
+<div id="map"></div>
+</div>
+
+<div class="panel">
+
+<h3>Emergency Location</h3>
+
+Enter coordinates between <b>0 – 9</b>
+
+<br><br>
+
+X: <input id="ex" type="number" min="0" max="9"><br>
+Y: <input id="ey" type="number" min="0" max="9"><br>
+
+<button onclick="dispatch()">Dispatch Ambulance</button>
+
+<h3>Distance Calculation</h3>
+<div id="distances"></div>
+
+<h3>Greedy Strategy</h3>
+<div>
+Select ambulance with <b>minimum distance</b>.
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const size=10;
+
+let ambulances=[
+{name:"A1",x:0,y:0},
+{name:"A2",x:2,y:1},
+{name:"A3",x:4,y:2},
+{name:"A4",x:7,y:1},
+{name:"A5",x:1,y:6},
+{name:"A6",x:5,y:7},
+{name:"A7",x:8,y:4},
+{name:"A8",x:3,y:9}
+];
+
+let emergency=null;
+
+function drawAxis(){
+
+let axis=document.getElementById("xaxis");
+axis.style.display="grid";
+axis.style.gridTemplateColumns="repeat(10,70px)";
+axis.innerHTML="";
+
+for(let i=0;i<size;i++){
+
+let d=document.createElement("div");
+d.className="axis";
+d.innerHTML=i;
+
+axis.appendChild(d);
+
+}
+
+}
+
+function draw(){
+
+let map=document.getElementById("map");
+map.innerHTML="";
+
+for(let y=0;y<size;y++){
+
+for(let x=0;x<size;x++){
+
+let cell=document.createElement("div");
+cell.className="cell";
+
+let text="";
+
+ambulances.forEach(a=>{
+if(a.x===x && a.y===y){
+text="🚑<br>"+a.name+"("+a.x+","+a.y+")";
+}
+});
+
+if(emergency && emergency.x===x && emergency.y===y)
+text="📍<br>E("+x+","+y+")";
+
+cell.innerHTML=text;
+
+map.appendChild(cell);
+
+}
+
+}
+
+}
+
+drawAxis();
+draw();
+
+function dispatch(){
+
+let ex=parseInt(document.getElementById("ex").value);
+let ey=parseInt(document.getElementById("ey").value);
+
+if(ex<0 || ex>9 || ey<0 || ey>9){
+alert("Enter coordinates between 0 and 9");
+return;
+}
+
+emergency={x:ex,y:ey};
+
+let min=999;
+let selected=null;
+let text="";
+
+ambulances.forEach(a=>{
+
+let d=Math.sqrt((ex-a.x)**2+(ey-a.y)**2);
+
+text+=a.name+" ("+a.x+","+a.y+") → "+d.toFixed(2)+"<br>";
+
+if(d<min){
+min=d;
+selected=a;
+}
+
+});
+
+text+="<br><b>Selected Ambulance: "+selected.name+
+" ("+selected.x+","+selected.y+")</b>";
+
+document.getElementById("distances").innerHTML=text;
+
+move(selected);
+
+}
+
+function move(a){
+
+let interval=setInterval(()=>{
+
+if(a.x<emergency.x) a.x++;
+else if(a.x>emergency.x) a.x--;
+
+else if(a.y<emergency.y) a.y++;
+else if(a.y>emergency.y) a.y--;
+
+else{
+clearInterval(interval);
+}
+
+draw();
+
+},400);
+
+}
+
+</script>
+
+</body>
+
+</html>
